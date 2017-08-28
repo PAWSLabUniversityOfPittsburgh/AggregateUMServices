@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<um2_dbstring>jdbc:mysql://localhost:3306/um2</um2_dbstring>
+	<um2_dbuser>root</um2_dbuser>
+	<um2_dbpass>root</um2_dbpass>
+	<verbose>true</verbose>
+</configuration>
