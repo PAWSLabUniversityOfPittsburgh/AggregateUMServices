@@ -868,7 +868,7 @@ public class um2DBInterface extends dbInterface {
 			HashMap<String, ArrayList<String>> res = new HashMap<String, ArrayList<String>>();
 			stmt = conn.createStatement();
 			String query = "SELECT A1.activity as set_name, A2.activity as act_name" 
-					+ " FROM um2.ent_activity A1, um2.ent_activity A2, um2.rel_activity_activity AA1"
+					+ " FROM um2.ent_activity A1, um2.ent_activity A2, um2.rel_pcex_set_component AA1"
 					+ " where A1.AppID = 45 and (A2.AppID = 46 or A2.AppID = 47)"
 					+ " and AA1.ParentActivityID = A1.ActivityID and AA1.ChildActivityID = A2.ActivityID;";
 			rs = stmt.executeQuery(query);
@@ -905,7 +905,7 @@ public class um2DBInterface extends dbInterface {
 			HashMap<String, ArrayList<String>> res = new HashMap<String, ArrayList<String>>();
 			stmt = conn.createStatement();
 			String query = "SELECT A1.activity as set_name, A2.activity as act_name" 
-					+ " FROM um2.ent_activity A1, um2.ent_activity A2, um2.rel_activity_activity AA1"
+					+ " FROM um2.ent_activity A1, um2.ent_activity A2, um2.rel_pcex_set_component AA1"
 					+ " where A1.AppID = 45 and A2.AppID = 47"
 					+ " and AA1.ParentActivityID = A1.ActivityID and AA1.ChildActivityID = A2.ActivityID;";
 			rs = stmt.executeQuery(query);
