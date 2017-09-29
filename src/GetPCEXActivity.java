@@ -233,7 +233,7 @@ public class GetPCEXActivity extends HttpServlet {
 						}
 
 						//computation for baseline and experimental group
-						if (grp.contains("CONTROL"))
+						if (grp.contains("CONTROL") | grp.contains("G0"))
 						{
 							set_progress = (example_viewed + challenges_viewed)/set_activities.get(content).size();
 							if (set_progress > 1.0)
@@ -353,7 +353,7 @@ public class GetPCEXActivity extends HttpServlet {
 						}
 
 						//computation for baseline and experimental group
-						if (grp.contains("CONTROL"))
+						if (grp.contains("CONTROL") | grp.contains("G0"))
 						{
 							set_progress = (example_viewed + challenges_viewed)/set_activities.get(content).size();
 							if (set_progress > 1.0)
