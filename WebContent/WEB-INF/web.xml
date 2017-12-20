@@ -155,4 +155,21 @@
     <url-pattern>/GetPCEXActivity</url-pattern>
   </servlet-mapping>
   
+  <servlet>
+    <servlet-name>GetPCEXActivityV2</servlet-name>
+    <servlet-class>GetPCEXActivityV2</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>GetPCEXActivityV2</servlet-name>
+    <url-pattern>/GetPCEXActivityV2</url-pattern>
+  </servlet-mapping>
+  
+   <servlet>
+    <servlet-name>GetPCEXChallengeActivity</servlet-name>
+    <servlet-class>GetPCEXChallengeActivity</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>GetPCEXChallengeActivity</servlet-name>
+    <url-pattern>/GetPCEXChallengeActivity</url-pattern>
+  </servlet-mapping>
 </web-app>

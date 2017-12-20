@@ -20,14 +20,14 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 /**
- * Servlet implementation class GetPCEXActivity
- * This version calculates the set progress based on the example and challenges in the set. 
- * The set progress is 1 if students solves all challenges in the set.
- * 
+ * Servlet implementation class GetPCEXActivityV2
+ * This version is to calculate the progress for the example. The example progress is 1 if 
+ * the students solves one challenge in the set or clicks on all clickable lines in the example.
+ * Here, we use the same approach for calculating the progress for all groups.
  * @author roya
  */
-@WebServlet("/GetPCEXActivity")
-public class GetPCEXActivity extends HttpServlet {
+@WebServlet("/GetPCEXActivityV2")
+public class GetPCEXActivityV2 extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static boolean verbose = false;
 	
@@ -41,7 +41,7 @@ public class GetPCEXActivity extends HttpServlet {
 	/**
 	 * @see HttpServlet#HttpServlet()
 	 */
-	public GetPCEXActivity() {
+	public GetPCEXActivityV2() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
@@ -122,9 +122,9 @@ public class GetPCEXActivity extends HttpServlet {
 			/*---------------------------------------------------------
 			 * Getting Data that we need for computation of student progress
 			 * --------------------------------------------------------- */			
-			if (GetPCEXActivity.set_activities == null)
+			if (GetPCEXActivityV2.set_activities == null)
 				set_activities = this.getActivitiesInPCEXSet(); //fill the static variable the first time
-			if (GetPCEXActivity.set_challenges == null)
+			if (GetPCEXActivityV2.set_challenges == null)
 				set_challenges = this.getChallengesInPCEXSet(); //fill the static variable the first time
 
 			HashMap<String, String[]> examples_activity = this.getUserExamplesActivity(usr, dateFrom); // activity report for the user u in ALL pcEx examples with appid XX
@@ -134,7 +134,7 @@ public class GetPCEXActivity extends HttpServlet {
 			 * Iterate through the sets and compute progress for each
 			 * --------------------------------------------------------- */	
 			//define the variables that we need to compute the progress for each set
-			double ex_progress, set_progress, challenge_progress, total_challenge,
+			double ex_progress, challenge_progress, total_challenge,
 					challenge_nsuccess, challenge_nattempts,challenges_viewed, example_viewed;
 			
 			Iterator ir = provider_cntListArray.iterator();
@@ -176,7 +176,6 @@ public class GetPCEXActivity extends HttpServlet {
 						ex_progress = 0;
 						challenge_progress = 0;
 						total_challenge = 0; 
-						set_progress = 0;
 						challenge_nsuccess = 0;
 						challenge_nattempts = 0;
 						challenges_viewed = 0;//for baseline progress calculation
@@ -190,6 +189,10 @@ public class GetPCEXActivity extends HttpServlet {
 								try{
 									//index 2 is nDistAct; index 3 is totalLines; (See GetWEActivity.java)
 									ex_progress = Double.parseDouble(examples_activity.get(a)[2]) / Double.parseDouble(examples_activity.get(a)[3]); 
+									/*
+									 * Note that the first element of attemptSeq is the completion ratio in the example.
+									 */
+									attemptSeq = ""+ ex_progress;
 								} catch (Exception e) {
 									ex_progress = 0; 
 								}
@@ -207,9 +210,16 @@ public class GetPCEXActivity extends HttpServlet {
 									//additional info obtained from challenge attempts
 									attempts += challenge_nattempts;
 									nsuccess += challenge_nsuccess;
-									if (challenges_activity.get(a)[3].trim().isEmpty() == false) {
-										attemptSeq += (attemptSeq.isEmpty()? "" : ",") + challenges_activity.get(a)[3];
 									
+									/* 
+									 * in case a challenge is solved correctly, we only add 1 to show the success on the challenge in the sequence
+									 * note that we don't use challenges_activity.get(a)[3] because although there is a successful attempt on the challenge, the last
+									 * attempt on the challenge might be wrong. Aggregate class always gets the last attempt in the sequence and pass it to MG UI, so
+									 * if there is a correct attempt on the challenge, we just add 1 to the sequence. If there is no correct attempt in a challenge,
+									 * then, the attemptSeq will only have example completion ratio, and aggregate will pass that to MG UI. 
+						             */
+									if (challenge_nsuccess > 0) {
+										attemptSeq += ",1" ;
 									}
 									
 								} catch (Exception e) { 
@@ -223,37 +233,16 @@ public class GetPCEXActivity extends HttpServlet {
 								  
 							}
 						}
-
-						//computation for baseline and experimental group
-						if (grp.contains("CONTROL") | grp.contains("G0"))
-						{
-							set_progress = (example_viewed + challenges_viewed)/set_activities.get(content).size();
-							if (set_progress > 1.0)
-							{
-								System.out.println("Error in computing the pcex progrss - (Control group)" 
-										  + " progress was greater than 1, so it got updated to 1. Set: " + content);
-								set_progress = 1.0;
-							}
-						} else {
-							//compute the progress
-							if ( challenge_progress == 0 & challenges_viewed > 0 ) { //check if no challenge solved
-								set_progress = 0.4 * ex_progress + 0.1 * (challenges_viewed/total_challenge) ;
-							} else if ( challenge_progress < total_challenge ) { //check if not all challenges are solved
-								set_progress = ( 0.4 * ex_progress ) + ( 0.6 * ( (double) challenge_progress / total_challenge ) );
-							} else if ( challenge_progress == total_challenge ) { //check if all challenges are solved
-								set_progress = 1.0;
-							} else {  //check if number of solved challenges is greater than total challenges (ERROR)
-								System.out.println("Error in computing the pcex progrss - number of solved challenges" 
-												  + " greater than total challenge. Set: " + content);
-								set_progress = 1.0;
-							}
-						}
-						
-
-						progress = set_progress; //the final progress for the set (content)
+								
+						progress = (challenge_progress > 0 ? 1 : ex_progress); //the final progress for the set (content)
 						
 						if (attempts > 0)
 							successRate = nsuccess / attempts;
+						
+						//if no clicks on the example lines and  no challenges solved (i.e., attemptSeq = ""), then set the attemptSeq to 0
+						if (attemptSeq.isEmpty())
+							attemptSeq = "0";
+						
 						cntSummaryObj.put("content-id", content);
 						cntSummaryObj.put("progress", progress); //set progress
 						cntSummaryObj.put("attempts", attempts);//total attempts on challenges in this set (sum attempts over all challenges)
@@ -287,7 +276,6 @@ public class GetPCEXActivity extends HttpServlet {
 						ex_progress = 0;
 						challenge_progress = 0;
 						total_challenge = 0; 
-						set_progress = 0;
 						challenge_nsuccess = 0;
 						challenge_nattempts = 0;
 						challenges_viewed = 0;//for baseline progress calculation
@@ -301,6 +289,10 @@ public class GetPCEXActivity extends HttpServlet {
 								try{
 									//index 2 is nDistAct; index 3 is totalLines; (See GetWEActivity.java)
 									ex_progress = Double.parseDouble(examples_activity.get(a)[2]) / Double.parseDouble(examples_activity.get(a)[3]); 
+									/*
+									 * Note that the first element of attemptSeq is the completion ratio in the example.
+									 */
+									attemptSeq = ""+ ex_progress;
 								} catch (Exception e) {
 									ex_progress = 0; 
 								}
@@ -318,8 +310,17 @@ public class GetPCEXActivity extends HttpServlet {
 									//additional info obtained from challenge attempts
 									attempts += challenge_nattempts;
 									nsuccess += challenge_nsuccess;
-									if (challenges_activity.get(a)[3].trim().isEmpty() == false) {
-										attemptSeq += (attemptSeq.isEmpty()? "" : ",") + challenges_activity.get(a)[3];
+									
+									
+									/* 
+									 * in case a challenge is solved correctly, we only add 1 to show the success on the challenge in the sequence
+									 * note that we don't use challenges_activity.get(a)[3] because although there is a successful attempt on the challenge, the last
+									 * attempt on the challenge might be wrong. Aggregate class always gets the last attempt in the sequence and pass it to MG UI, so
+									 * if there is a correct attempt on the challenge, we just add 1 to the sequence. If there is no correct attempt in a challenge,
+									 * then, the attemptSeq will only have example completion ratio, and aggregate will pass that to MG UI. 
+						             */
+									if (challenge_nsuccess > 0) {
+										attemptSeq += ",1" ;
 									}
 									
 								} catch (Exception e) { 
@@ -333,35 +334,15 @@ public class GetPCEXActivity extends HttpServlet {
 							}
 						}
 
-						//computation for baseline and experimental group
-						if (grp.contains("CONTROL") | grp.contains("G0"))
-						{
-							set_progress = (example_viewed + challenges_viewed)/set_activities.get(content).size();
-							if (set_progress > 1.0)
-							{
-								System.out.println("Error in computing the pcex progrss - (Control group)" 
-										  + " progress was greater than 1, so it got updated to 1. Set: " + content);
-								set_progress = 1.0;
-							}
-						} else {
-							//compute the progress
-							if ( challenge_progress == 0 & challenges_viewed > 0 ) { //check if no challenge solved
-								set_progress = 0.4 * ex_progress + 0.1 * (challenges_viewed/total_challenge) ;
-							} else if ( challenge_progress < total_challenge ) { //check if not all challenges are solved
-								set_progress = ( 0.4 * ex_progress ) + ( 0.6 * ( (double) challenge_progress / total_challenge ) );
-							} else if ( challenge_progress == total_challenge ) { //check if all challenges are solved
-								set_progress = 1.0;
-							} else {  //check if number of solved challenges is greater than total challenges (ERROR)
-								System.out.println("Error in computing the pcex progrss - number of solved challenges" 
-												  + " greater than total challenge. Set: " + content);
-								set_progress = 1.0;
-							}
-						}
-						
+						progress = (challenge_progress > 0 ? 1 : ex_progress); //the final progress for the set (content)
 
-						progress = set_progress; //the final progress for the set (content)
 						if (attempts > 0)
 							successRate = nsuccess / attempts;
+						
+						//if no clicks on the example lines and  no challenges solved (i.e., attemptSeq = ""), then set the attemptSeq to 0
+						if (attemptSeq.isEmpty())
+							attemptSeq = "0";
+						
 						cntSummaryObj.put("content-id", content);
 						cntSummaryObj.put("progress", progress); //set progress
 						cntSummaryObj.put("attempts", attempts);//total attempts on challenges in this set (sum attempts over all challenges)

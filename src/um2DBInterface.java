@@ -694,7 +694,7 @@ public class um2DBInterface extends dbInterface {
     	try {
             
             stmt = conn.createStatement();
-            String query = "SELECT AC.activity as activity, count(UA.activityid) as nattempts, max(result) as progress, "
+            String query = "SELECT AC.activity as activity, count(UA.activityid) as nattempts, sum(result) as nsuccess, "
             		+ "GROUP_CONCAT(cast(UA.Result as char) order by UA.datentime asc separator ',') as attemptSeq "
             		+ "FROM um2.ent_user_activity UA, um2.ent_activity AC "
             		+ "WHERE UA.appid=44 AND UA.userid = (select userid from um2.ent_user where login='"+ usr + "') "
@@ -715,7 +715,7 @@ public class um2DBInterface extends dbInterface {
                 String[] act = new String[4];
                 act[0] = rs.getString("activity");
                 act[1] = rs.getString("nattempts");
-                act[2] = rs.getString("progress");
+                act[2] = rs.getString("nsuccess");
                 act[3] = rs.getString("attemptSeq");
                 if (act[0].length() > 0)
                     res.put(act[0], act);

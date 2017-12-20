@@ -21,17 +21,17 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 /**
- * Servlet implementation class GetPCRSActivity
+ * Servlet implementation class GetPCEXChallengeActivity
  */
-@WebServlet("/GetPCRSActivity")
-public class GetPCRSActivity extends HttpServlet {
+@WebServlet("/GetPCEXChallengeActivity")
+public class GetPCEXChallengeActivity extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static boolean verbose = false;
 
 	/**
 	 * @see HttpServlet#HttpServlet()
 	 */
-	public GetPCRSActivity() {
+	public GetPCEXChallengeActivity() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
@@ -109,7 +109,7 @@ public class GetPCRSActivity extends HttpServlet {
 
 			JSONArray provider_cntListArray = (JSONArray)jsonObject.get("content-list-by-provider");
 			if(verbose) System.out.println(provider_cntListArray);
-			HashMap<String, String[]> problems_activity = this.getUserQuestionsActivity(usr, domain, dateFrom);
+			HashMap<String, String[]> problems_activity = this.getUserChallengesActivity (usr, dateFrom);
 
 			//if(verbose) System.out.println(content_list_by_provider.toString());
 			//For each object in this JSONArray
@@ -158,9 +158,9 @@ public class GetPCRSActivity extends HttpServlet {
 								attemptSeq = currentQuestionAct[3];
 								if (attempts>0) {
 									successRate = nsuccess/attempts;
-								}	  
+								}	
 								if (nsuccess > 0)
-									progress = 1;  
+									progress = 1;
 								
 							}catch(Exception e){progress = 0;nsuccess=0;successRate=0;attemptSeq="";}
 
@@ -196,7 +196,7 @@ public class GetPCRSActivity extends HttpServlet {
 								attemptSeq = currentQuestionAct[3];
 								if (attempts>0) {
 									successRate = nsuccess/attempts;
-								}	  
+								}	
 								if (nsuccess > 0)
 									progress = 1;  
 								
@@ -242,7 +242,10 @@ public class GetPCRSActivity extends HttpServlet {
 
 	}//end of doPost
 
-	public HashMap<String, String[]> getUserQuestionsActivity(String usr, String domain, String dateFrom) {
+	/**
+	 * The method to get PCEX challenges that student has attempted 
+	 */
+	public HashMap<String, String[]> getUserChallengesActivity(String usr, String dateFrom) {
 		HashMap<String, String[]> qActivity = new HashMap<String, String[]>();
 		boolean error = false;
 		String errorMsg = "";
@@ -254,7 +257,7 @@ public class GetPCRSActivity extends HttpServlet {
 		}else{	
 			um2_db = new um2DBInterface(cm.um2_dbstring,cm.um2_dbuser,cm.um2_dbpass);
 			um2_db.openConnection();
-			qActivity = um2_db.getUserPCRSActivity(usr, dateFrom);
+			qActivity = um2_db.getUserPCEXChallengesActivity(usr, dateFrom);
 			um2_db.closeConnection();
 		}
 		return qActivity;
