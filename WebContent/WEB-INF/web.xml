@@ -172,4 +172,8 @@
     <servlet-name>GetPCEXChallengeActivity</servlet-name>
     <url-pattern>/GetPCEXChallengeActivity</url-pattern>
   </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>GetSQLTutorActivity</servlet-name>
+    <url-pattern>/GetSQLTutorActivity</url-pattern>
+  </servlet-mapping>
 </web-app>

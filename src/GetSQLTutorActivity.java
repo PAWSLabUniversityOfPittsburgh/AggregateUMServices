@@ -10,15 +10,21 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import utils.JSONUtils;
+import entity.ContentProgressSummary;
+import entity.ProgressOutput;
+import entity.ProgressRequest;
+import entity.ProviderContent;
+
 /**
  * Servlet implementation class GetSQLTUTORActivity
  * @author cskamil
  */
 @WebServlet("/GetSQLTUTORActivity")
-public class GetSQLTUTORActivity extends HttpServlet {
+public class GetSQLTutorActivity extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
-	public GetSQLTUTORActivity() {
+	public GetSQLTutorActivity() {
 		super();
 	}
 
