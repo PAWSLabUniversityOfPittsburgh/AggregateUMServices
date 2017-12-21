@@ -29,7 +29,12 @@ public class ContentProgressSummary {
 	@JsonProperty("sub-activities")
 	private int subActivities;	
 	
-	public ContentProgressSummary() {
+	public ContentProgressSummary(String contentId) {
+		this.contentId = contentId;
+		this.annotationCount = -1;
+		this.likeCount = -1;
+		this.timeSpent = -1;
+		this.subActivities = -1;
 		this.attemptsSequence = "";
 	}
 

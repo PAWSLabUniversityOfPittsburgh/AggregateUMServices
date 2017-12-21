@@ -20,7 +20,7 @@ import entity.ProviderContent;
  * Servlet implementation class GetSQLTUTORActivity
  * @author cskamil
  */
-@WebServlet("/GetSQLTUTORActivity")
+@WebServlet("/GetSQLTutorActivity")
 public class GetSQLTutorActivity extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
@@ -31,6 +31,52 @@ public class GetSQLTutorActivity extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		doPost(request, response);
 	}
+	
+	public static void main(String[] args) {
+	     String jsonString = "{\n" +
+	                "  \"domain\" : \"sql\",\n" +
+	                "  \"user-id\" : \"akhuseyinoglu\",\n" +
+	                "  \"group-id\" : \"DemoSQLTutor\",\n" +
+	                "  \"date-from\" : null,\n" +
+	                "  \"content-list-by-provider\" : [ {\n" +
+	                "    \"provider-id\" : \"sqltutor\",\n" +
+	                "    \"content-list\" : [ \"SQL-TUTOR_problem_1\" ]\n" +
+	                "  } ]\n" +
+	                "}";
+	     
+	    ProgressRequest contentInput = JSONUtils.parseJSONToObject(jsonString, ProgressRequest.class);
+			
+		ProgressOutput progressOutput = new ProgressOutput(contentInput.getUserId(), contentInput.getGroudId(), contentInput.getDateFrom());
+
+		HashMap<String, String[]> sqltutor_activity = new HashMap<String, String[]>();
+		
+		sqltutor_activity.put("SQL-TUTOR_problem_1", new String[]{"SQL-TUTOR_problem_1","2","0","0,0"});
+		sqltutor_activity.put("5", new String[]{"5","1","0","0"});
+		sqltutor_activity.put("154", new String[]{"154","2","1","0,1"});
+		
+		ProviderContent[] providerContentList = contentInput.getProviderContentList();
+		
+		for (ProviderContent providerContent : providerContentList) {
+			String[] contentList = providerContent.getContentList();
+			
+			if(contentList.length != 0) {
+				for (String content : contentList) {
+					ContentProgressSummary progressSummary = createProgressSummary(content, sqltutor_activity);
+					progressOutput.addContentProgress(progressSummary);
+				}
+			} else {
+				Set<Entry<String, String[]>> activitySet = sqltutor_activity.entrySet();
+				for (Entry<String, String[]> contentActivity : activitySet) {
+					ContentProgressSummary progressSummary = createProgressSummary(contentActivity.getKey(), sqltutor_activity);
+					progressOutput.addContentProgress(progressSummary);
+				}
+			}
+			
+		}
+		
+		System.out.println(JSONUtils.writeObjectAsJSONString(progressOutput));
+		
+	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		/**
@@ -39,8 +85,36 @@ public class GetSQLTutorActivity extends HttpServlet {
 		ProgressRequest contentInput = JSONUtils.parseJSONToObject(request.getInputStream(), ProgressRequest.class);
 		
 		ProgressOutput progressOutput = new ProgressOutput(contentInput.getUserId(), contentInput.getGroudId(), contentInput.getDateFrom());
+		
+		
+		String query = "SELECT " + 
+			    "AC.activity AS activity," +
+			    "COUNT(UA.activityid) AS nattempts," +
+			    "MAX(result) AS progress," +
+			    "GROUP_CONCAT(CAST(UA.Result AS CHAR) " +
+			        "ORDER BY UA.datentime ASC " +
+			        "SEPARATOR ',') AS attemptSeq " +
+			"FROM " +
+			    "um2.ent_user_activity UA INNER JOIN " +
+			    "um2.ent_activity AC on UA.ActivityID = AC.ActivityID INNER JOIN " +
+			    "um2.ent_user usr on UA.UserID = usr.UserID " +
+			"WHERE " +
+			    "UA.appid = 19 " +
+					"AND usr.Login = '"+ contentInput.getUserId() + "' " +
+			        "AND UA.Result != - 1 ";
+
+
+			if(contentInput.getDateFrom() != null && contentInput.getDateFrom().length() > 0){
+				query += "AND UA.datentime > '"+contentInput.getDateFrom()+"' ";
+			}
+			
+			query += "GROUP BY UA.activityid;";
+			
+		System.out.println(query);
+		
 
 		HashMap<String, String[]> sqltutor_activity = this.getSQLTUTORActivity(contentInput.getUserId(), contentInput.getGroudId(), contentInput.getDateFrom());
+		System.out.println(sqltutor_activity);
 		ProviderContent[] providerContentList = contentInput.getProviderContentList();
 		
 		for (ProviderContent providerContent : providerContentList) {
@@ -67,9 +141,9 @@ public class GetSQLTutorActivity extends HttpServlet {
 
 	}
 
-	private ContentProgressSummary createProgressSummary(String content, HashMap<String, String[]> sqltutor_activity) {
+	private static ContentProgressSummary createProgressSummary(String content, HashMap<String, String[]> sqltutor_activity) {
 		String[] contentActivity = sqltutor_activity.get(content);
-		ContentProgressSummary contentSummary = new ContentProgressSummary();
+		ContentProgressSummary contentSummary = new ContentProgressSummary(content);
 		
 		if(contentActivity != null){
 			try{
@@ -92,7 +166,7 @@ public class GetSQLTutorActivity extends HttpServlet {
 		um2DBInterface um2_db = new um2DBInterface(cm.um2_dbstring,cm.um2_dbuser,cm.um2_dbpass);
 		
 		um2_db.openConnection();
-		HashMap<String, String[]> sqltutorActivityMap= um2_db.getUserPCRSActivity(usr, dateFrom);
+		HashMap<String, String[]> sqltutorActivityMap= um2_db.getUserSQLTUTORActivity(usr, dateFrom);
 		um2_db.closeConnection();
 		
 		return sqltutorActivityMap;

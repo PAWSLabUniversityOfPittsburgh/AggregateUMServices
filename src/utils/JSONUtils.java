@@ -31,5 +31,16 @@ public class JSONUtils {
 		return null;
 	}
 	
+	public static <T> T parseJSONToObject(String json, Class<T> clazz) {
+		ObjectMapper objectMapper = new ObjectMapper();
+		try {
+			return objectMapper.readValue(json, clazz);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+	
 
 }

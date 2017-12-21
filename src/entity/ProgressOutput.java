@@ -2,6 +2,7 @@ package entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 
@@ -16,7 +17,9 @@ public class ProgressOutput {
 	@JsonProperty("date-from")
 	private String dateFrom;
 	
+	@JsonProperty("content-list")
 	private List<ContentProgressSummary> contentSummaryList;
+	
 	
 	public ProgressOutput(String userId, String groudId, String dateFrom) {
 		this.userId = userId;
@@ -52,10 +55,4 @@ public class ProgressOutput {
 	public void setDateFrom(String dateFrom) {
 		this.dateFrom = dateFrom;
 	}
-
-	@JsonProperty("content-list")
-	public ContentProgressSummary[] getContentSummary() {
-		return (ContentProgressSummary[]) contentSummaryList.toArray();
-	}
-
 }
