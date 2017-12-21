@@ -32,52 +32,6 @@ public class GetSQLTutorActivity extends HttpServlet {
 		doPost(request, response);
 	}
 	
-	public static void main(String[] args) {
-	     String jsonString = "{\n" +
-	                "  \"domain\" : \"sql\",\n" +
-	                "  \"user-id\" : \"akhuseyinoglu\",\n" +
-	                "  \"group-id\" : \"DemoSQLTutor\",\n" +
-	                "  \"date-from\" : null,\n" +
-	                "  \"content-list-by-provider\" : [ {\n" +
-	                "    \"provider-id\" : \"sqltutor\",\n" +
-	                "    \"content-list\" : [ \"SQL-TUTOR_problem_1\" ]\n" +
-	                "  } ]\n" +
-	                "}";
-	     
-	    ProgressRequest contentInput = JSONUtils.parseJSONToObject(jsonString, ProgressRequest.class);
-			
-		ProgressOutput progressOutput = new ProgressOutput(contentInput.getUserId(), contentInput.getGroudId(), contentInput.getDateFrom());
-
-		HashMap<String, String[]> sqltutor_activity = new HashMap<String, String[]>();
-		
-		sqltutor_activity.put("SQL-TUTOR_problem_1", new String[]{"SQL-TUTOR_problem_1","2","0","0,0"});
-		sqltutor_activity.put("5", new String[]{"5","1","0","0"});
-		sqltutor_activity.put("154", new String[]{"154","2","1","0,1"});
-		
-		ProviderContent[] providerContentList = contentInput.getProviderContentList();
-		
-		for (ProviderContent providerContent : providerContentList) {
-			String[] contentList = providerContent.getContentList();
-			
-			if(contentList.length != 0) {
-				for (String content : contentList) {
-					ContentProgressSummary progressSummary = createProgressSummary(content, sqltutor_activity);
-					progressOutput.addContentProgress(progressSummary);
-				}
-			} else {
-				Set<Entry<String, String[]>> activitySet = sqltutor_activity.entrySet();
-				for (Entry<String, String[]> contentActivity : activitySet) {
-					ContentProgressSummary progressSummary = createProgressSummary(contentActivity.getKey(), sqltutor_activity);
-					progressOutput.addContentProgress(progressSummary);
-				}
-			}
-			
-		}
-		
-		System.out.println(JSONUtils.writeObjectAsJSONString(progressOutput));
-		
-	}
-
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		/**
 		 * Parse Json in request
@@ -141,7 +95,7 @@ public class GetSQLTutorActivity extends HttpServlet {
 
 	}
 
-	private static ContentProgressSummary createProgressSummary(String content, HashMap<String, String[]> sqltutor_activity) {
+	private ContentProgressSummary createProgressSummary(String content, HashMap<String, String[]> sqltutor_activity) {
 		String[] contentActivity = sqltutor_activity.get(content);
 		ContentProgressSummary contentSummary = new ContentProgressSummary(content);
 		
