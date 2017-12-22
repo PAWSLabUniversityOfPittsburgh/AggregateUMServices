@@ -39,36 +39,8 @@ public class GetSQLTutorActivity extends HttpServlet {
 		ProgressRequest contentInput = JSONUtils.parseJSONToObject(request.getInputStream(), ProgressRequest.class);
 		
 		ProgressOutput progressOutput = new ProgressOutput(contentInput.getUserId(), contentInput.getGroudId(), contentInput.getDateFrom());
-		
-		
-		String query = "SELECT " + 
-			    "AC.activity AS activity," +
-			    "COUNT(UA.activityid) AS nattempts," +
-			    "MAX(result) AS progress," +
-			    "GROUP_CONCAT(CAST(UA.Result AS CHAR) " +
-			        "ORDER BY UA.datentime ASC " +
-			        "SEPARATOR ',') AS attemptSeq " +
-			"FROM " +
-			    "um2.ent_user_activity UA INNER JOIN " +
-			    "um2.ent_activity AC on UA.ActivityID = AC.ActivityID INNER JOIN " +
-			    "um2.ent_user usr on UA.UserID = usr.UserID " +
-			"WHERE " +
-			    "UA.appid = 19 " +
-					"AND usr.Login = '"+ contentInput.getUserId() + "' " +
-			        "AND UA.Result != - 1 ";
-
-
-			if(contentInput.getDateFrom() != null && contentInput.getDateFrom().length() > 0){
-				query += "AND UA.datentime > '"+contentInput.getDateFrom()+"' ";
-			}
-			
-			query += "GROUP BY UA.activityid;";
-			
-		System.out.println(query);
-		
 
 		HashMap<String, String[]> sqltutor_activity = this.getSQLTUTORActivity(contentInput.getUserId(), contentInput.getGroudId(), contentInput.getDateFrom());
-		System.out.println(sqltutor_activity);
 		ProviderContent[] providerContentList = contentInput.getProviderContentList();
 		
 		for (ProviderContent providerContent : providerContentList) {
