@@ -9,11 +9,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -27,7 +29,6 @@ import org.json.simple.parser.ParseException;
 public class GetPCEXExampleActivity extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static boolean verbose = false;
-       
 	/*---------------------------------------------------------
 	 * The set-examples relationship data structures (STATIC)
 	 * --------------------------------------------------------- */			
@@ -94,109 +95,115 @@ public class GetPCEXExampleActivity extends HttpServlet {
 			domain = (String)jsonObject.get("domain");
 			dateFrom = (String)jsonObject.get("date-from");
 
-			if(verbose){
-				System.out.println("The usr is: " + usr);
-				System.out.println("The grp is: " + grp);
-				System.out.println("The domain is: " + domain);
-				
-			}
-			
-			/**
-			 * make output Json
-			 */
-			JSONObject totalObject = new JSONObject();
-			totalObject.put("user-id", usr);
-			totalObject.put("group-id", grp);
-			JSONArray outputCntListArray = new JSONArray();
-			response.setContentType("application/json");
-			PrintWriter out = response.getWriter();
-			
-			
-			/*---------------------------------------------------------
-			 * Getting Data that we need for computation of student progress
-			 * --------------------------------------------------------- */			
-			if (GetPCEXExampleActivity.set_examples == null)
-				set_examples = this.getExamplesInPCEXSet(); //fill the static variable the first time
-
-			
-			JSONArray provider_cntListArray = (JSONArray)jsonObject.get("content-list-by-provider");
-			if(verbose) System.out.println(provider_cntListArray);
-			HashMap<String, String[]> examples_activity = this.getUserExamplesActivity(usr, dateFrom);
-			
-			//if(verbose) System.out.println(content_list_by_provider.toString());
-			//For each object in this JSONArray
-			Iterator ir = provider_cntListArray.iterator();
-			while (ir.hasNext()) {
-				contentList.clear();
-				JSONObject each_content_list_by_provider = (JSONObject)ir.next();
-				System.out.println(each_content_list_by_provider.toString());
-				String provider_id = (String)each_content_list_by_provider.get("provider-id");
-				//each_content_list_by_provider.
-				JSONArray cntListArray = (JSONArray)each_content_list_by_provider.get("content-list");
-				if (verbose) {
-					System.out.println(provider_id);
-					System.out.println(cntListArray.toJSONString());					
+			//TODO: this part is added temporary for set progress calculation when the domain is python 
+			if (domain.equals("py")) {
+				request.setAttribute("data", jsonObject);
+				RequestDispatcher dispatcher = request.getRequestDispatcher("/GetPCEXActivity");
+				dispatcher.forward(request, response);
+			} else {
+				if(verbose){
+					System.out.println("The usr is: " + usr);
+					System.out.println("The grp is: " + grp);
+					System.out.println("The domain is: " + domain);
+					
 				}
 				
-				
-				
-				//Because there is no key in this array, we handle it in this way
-				//http://stackoverflow.com/questions/23393312/parse-simple-json-array-without-key
-				for (int i = 0; i < cntListArray.size(); i++) {
-					  String content =  (String) cntListArray.get(i);
-					  //System.out.println(value);
-					  contentList.add(content);
-					  
-					  //double[] cntSummary = getContentSummary(usr, domain, provider_id, content);
-					  
-					  //Note: content is in fact the set, we need to get progress on the example in the set
-					  String[] currentExampleAct = examples_activity.get(set_examples.get(content));
-					  JSONObject cntSummaryObj = new JSONObject();
+				response.setContentType("application/json");
+				PrintWriter out = response.getWriter();
 
-					  if(currentExampleAct == null){
-						  if(verbose) System.out.println("currentExampleAct is null");
-					  }
-					  double progress = 0;
-					  double nDistAct = 0;
-					  double totalLines = 0;
-					  double attempts = 0;
-					  if(currentExampleAct != null){
-						  if(verbose) System.out.println(Arrays.toString(currentExampleAct));
-						  try{
-							  attempts = Double.parseDouble(currentExampleAct[1]);
-							  nDistAct = Double.parseDouble(currentExampleAct[2]);
-							  totalLines = Double.parseDouble(currentExampleAct[3]);
-							  progress = nDistAct/totalLines;
+				/**
+				 * make output Json
+				 */
+				JSONObject totalObject = new JSONObject();
+				totalObject.put("user-id", usr);
+				totalObject.put("group-id", grp);
+				JSONArray outputCntListArray = new JSONArray();
+								
+				/*---------------------------------------------------------
+				 * Getting Data that we need for computation of student progress
+				 * --------------------------------------------------------- */			
+				if (GetPCEXExampleActivity.set_examples == null)
+					set_examples = this.getExamplesInPCEXSet(); //fill the static variable the first time
 
-						  }catch(Exception e){}
-						  
-					  }
-					  
-					  cntSummaryObj.put("content-id", content);
-					  cntSummaryObj.put("progress", progress);
-					  cntSummaryObj.put("attempts", attempts);
-					  cntSummaryObj.put("success-rate", -1);
-					  cntSummaryObj.put("annotation-count", -1);//??
-					  cntSummaryObj.put("like-count", -1);
-					  cntSummaryObj.put("time-spent", -1);
-					  cntSummaryObj.put("sub-activities", totalLines);
-					  outputCntListArray.add(cntSummaryObj);
+				
+				JSONArray provider_cntListArray = (JSONArray)jsonObject.get("content-list-by-provider");
+				if(verbose) System.out.println(provider_cntListArray);
+				HashMap<String, String[]> examples_activity = this.getUserExamplesActivity(usr, dateFrom);
+				
+				//if(verbose) System.out.println(content_list_by_provider.toString());
+				//For each object in this JSONArray
+				Iterator ir = provider_cntListArray.iterator();
+				while (ir.hasNext()) {
+					contentList.clear();
+					JSONObject each_content_list_by_provider = (JSONObject)ir.next();
+					System.out.println(each_content_list_by_provider.toString());
+					String provider_id = (String)each_content_list_by_provider.get("provider-id");
+					//each_content_list_by_provider.
+					JSONArray cntListArray = (JSONArray)each_content_list_by_provider.get("content-list");
+					if (verbose) {
+						System.out.println(provider_id);
+						System.out.println(cntListArray.toJSONString());					
 					}
-				//System.out.println(contentListArray);
-				provider_contentListMap.put(provider_id, contentList);
+					
+					
+					
+					//Because there is no key in this array, we handle it in this way
+					//http://stackoverflow.com/questions/23393312/parse-simple-json-array-without-key
+					for (int i = 0; i < cntListArray.size(); i++) {
+						  String content =  (String) cntListArray.get(i);
+						  //System.out.println(value);
+						  contentList.add(content);
+						  
+						  //double[] cntSummary = getContentSummary(usr, domain, provider_id, content);
+						  
+						  //Note: content is in fact the set, we need to get progress on the example in the set
+						  String[] currentExampleAct = examples_activity.get(set_examples.get(content));
+						  JSONObject cntSummaryObj = new JSONObject();
+
+						  if(currentExampleAct == null){
+							  if(verbose) System.out.println("currentExampleAct is null");
+						  }
+						  double progress = 0;
+						  double nDistAct = 0;
+						  double totalLines = 0;
+						  double attempts = 0;
+						  if(currentExampleAct != null){
+							  if(verbose) System.out.println(Arrays.toString(currentExampleAct));
+							  try{
+								  attempts = Double.parseDouble(currentExampleAct[1]);
+								  nDistAct = Double.parseDouble(currentExampleAct[2]);
+								  totalLines = Double.parseDouble(currentExampleAct[3]);
+								  progress = nDistAct/totalLines;
+
+							  }catch(Exception e){}
+							  
+						  }
+						  
+						  cntSummaryObj.put("content-id", content);
+						  cntSummaryObj.put("progress", progress);
+						  cntSummaryObj.put("attempts", attempts);
+						  cntSummaryObj.put("success-rate", -1);
+						  cntSummaryObj.put("annotation-count", -1);//??
+						  cntSummaryObj.put("like-count", -1);
+						  cntSummaryObj.put("time-spent", -1);
+						  cntSummaryObj.put("sub-activities", totalLines);
+						  outputCntListArray.add(cntSummaryObj);
+						}
+					//System.out.println(contentListArray);
+					provider_contentListMap.put(provider_id, contentList);
+				}
+				
+				/**
+				 * continue make output Json
+				 */
+				totalObject.put("content-list", outputCntListArray);
+				
+				if (verbose) {
+					System.out.println(totalObject.toString());
+				}
+				out.write(totalObject.toJSONString());
 			}
-			
-			/**
-			 * continue make output Json
-			 */
-			totalObject.put("content-list", outputCntListArray);
-			
-			if (verbose) {
-				System.out.println(totalObject.toString());
-			}
-			out.write(totalObject.toJSONString());
-			
-			
+
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
@@ -239,6 +246,5 @@ public class GetPCEXExampleActivity extends HttpServlet {
 		um2_db.closeConnection();
     	return setExamples;
 	}
-
 
 }
