@@ -177,6 +177,7 @@ public class GetSKActivity extends HttpServlet {
 					  cntSummaryObj.put("progress", progress);
 					  cntSummaryObj.put("attempts", attempts);
 					  cntSummaryObj.put("success-rate", successRate);
+					  //Last k attempts summary (added by @Jordan)
 					  cntSummaryObj.put("lastk-progress", lastKprogress);
 					  cntSummaryObj.put("lastk-attempts", lastKattempts);
 					  cntSummaryObj.put("lastk-success-rate", lastKsuccessRate);

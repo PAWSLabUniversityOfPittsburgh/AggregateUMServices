@@ -334,21 +334,68 @@ public class um2DBInterface extends dbInterface {
     	try {
             
             stmt = conn.createStatement();
-            String query = "select QN.content_name as activity, count(UA.activityid) as nattempts,  sum(UA.Result) as nsuccess "
-                    + " from um2.ent_user_activity UA, um2.sql_question_names QN where UA.appid=23 and "
-                    + " UA.userid = (select userid from um2.ent_user where login='" + usr + "') and "
-                    + " QN.activityid=UA.activityid and UA.Result != -1  "
-                    + " group by UA.activityid; ";
-
-            // System.out.println(query);
+            //Old query which does not take into account the success rate on the k-th last attempts
+//            String query = "select QN.content_name as activity, count(UA.activityid) as nattempts,  sum(UA.Result) as nsuccess "
+//                    + " from um2.ent_user_activity UA, um2.sql_question_names QN where UA.appid=23 and "
+//                    + " UA.userid = (select userid from um2.ent_user where login='" + usr + "') and "
+//                    + " QN.activityid=UA.activityid and UA.Result != -1  "
+//                    + " group by UA.activityid; ";
+            int kLastResults = 15;//@Jordan pending make it parameterizable
+            String query = "SELECT * " + 
+            		"FROM (SELECT" + 
+            		"    QN.content_name AS activity," + 
+            		"    UA.activityid," + 
+            		"    COUNT(UA.activityid) AS nattempts," + 
+            		"    SUM(UA.Result) AS nsuccess " + 
+            		"FROM" + 
+            		"    um2.ent_user_activity UA," + 
+            		"    um2.sql_question_names QN " + 
+            		"WHERE" + 
+            		"    UA.appid = 23" + 
+            		"        AND UA.userid = (SELECT " + 
+            		"            userid" + 
+            		"        FROM" + 
+            		"            um2.ent_user" + 
+            		"        WHERE" + 
+            		"            login = '"+usr+"')" + 
+            		"        AND QN.activityid = UA.activityid" + 
+            		"        AND UA.Result != - 1 " + 
+            		"GROUP BY UA.activityid) HA " + 
+            		"LEFT JOIN (SELECT " + 
+            		"        LastResults.activityid," + 
+            		"            COUNT(LastResults.activityid) AS lastk_nattempts," + 
+            		"            SUM(LastResults.Result) AS lastk_nsuccess" + 
+            		"    FROM" + 
+            		"        (SELECT " + 
+            		"			*" + 
+            		"		FROM" + 
+            		"			um2.ent_user_activity " + 
+            		"		WHERE" + 
+            		"			userid = (SELECT " + 
+            		"					userid " + 
+            		"				FROM" + 
+            		"					um2.ent_user " + 
+            		"				WHERE" + 
+            		"					login = '"+usr+"')" + 
+            		"				AND appid = 23 " + 
+            		"				AND Result != - 1 " + 
+            		"		ORDER BY DateNTime DESC " + 
+            		"		LIMIT "+kLastResults+") AS LastResults " + 
+            		"    GROUP BY LastResults.activityid) LA " + 
+            		"ON HA.activityid = LA.activityid;";
+            
             rs = stmt.executeQuery(query);
             boolean noactivity = true;
             while (rs.next()) {
                 noactivity = false;
-                String[] act = new String[3];
+                String[] act = new String[5];
                 act[0] = rs.getString("activity");
                 act[1] = rs.getString("nattempts");
                 act[2] = rs.getString("nsuccess");
+                act[3] = rs.getString("lastk_nattempts");
+                if(act[3]==null) act[3] = "-1";
+                act[4] = rs.getString("lastk_nsuccess");
+                if(act[3]==null) act[4] = "-1";
                 if (act[0].length() > 0)
                     res.put(act[0], act);
             }
