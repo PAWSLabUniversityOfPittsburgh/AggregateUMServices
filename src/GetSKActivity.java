@@ -65,6 +65,7 @@ public class GetSKActivity extends HttpServlet {
 		//the key of map is provider name, the ArrayList stores content list of this provider
 		Map<String, ArrayList<String>> provider_contentListMap = new HashMap<String, ArrayList<String>>();
 		//Map<String, Double[]> 
+		int lastK = 15;
 		try {
 			/**
 			 * {
@@ -142,6 +143,10 @@ public class GetSKActivity extends HttpServlet {
 					  double nsuccess = 0;
 					  double attempts = 0;
 					  double successRate = 0;
+					  double lastKprogress = -1.0;
+					  double lastKnsuccess = -1.0;
+					  double lastKattempts = -1.0;
+					  double lastKsuccessRate = -1.0;
 					  if(currentQuestionAct != null){
 						  if(verbose) System.out.println(Arrays.toString(currentQuestionAct));
 						  try{
@@ -153,6 +158,17 @@ public class GetSKActivity extends HttpServlet {
 							  if (nsuccess>0) {
 								progress = 1.0;
 							  }
+							  //Metrics related to the last k attempts (for recommendation purposes) added by @Jordan
+							  lastKattempts = Double.parseDouble(currentQuestionAct[3]);
+							  lastKnsuccess = Double.parseDouble(currentQuestionAct[4]);
+
+							  if (lastKattempts>0) {
+								  lastKsuccessRate = lastKnsuccess/lastKattempts;
+							  }
+
+							  if (lastKnsuccess>0) {
+								lastKprogress = 1.0;
+							  }	  
 						  }catch(Exception e){}
 						  
 					  }
@@ -161,6 +177,10 @@ public class GetSKActivity extends HttpServlet {
 					  cntSummaryObj.put("progress", progress);
 					  cntSummaryObj.put("attempts", attempts);
 					  cntSummaryObj.put("success-rate", successRate);
+					  //Last k attempts summary (added by @Jordan)
+					  cntSummaryObj.put("lastk-progress", lastKprogress);
+					  cntSummaryObj.put("lastk-attempts", lastKattempts);
+					  cntSummaryObj.put("lastk-success-rate", lastKsuccessRate);
 					  cntSummaryObj.put("annotation-count", -1);//??
 					  cntSummaryObj.put("like-count", -1);
 					  cntSummaryObj.put("time-spent", -1);
@@ -179,6 +199,7 @@ public class GetSKActivity extends HttpServlet {
 			if (verbose) {
 				System.out.println(totalObject.toString());
 			}
+			System.out.println(totalObject.toString());
 			out.write(totalObject.toJSONString());
 			
 			

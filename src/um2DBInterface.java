@@ -334,21 +334,68 @@ public class um2DBInterface extends dbInterface {
     	try {
             
             stmt = conn.createStatement();
-            String query = "select QN.content_name as activity, count(UA.activityid) as nattempts,  sum(UA.Result) as nsuccess "
-                    + " from um2.ent_user_activity UA, um2.sql_question_names QN where UA.appid=23 and "
-                    + " UA.userid = (select userid from um2.ent_user where login='" + usr + "') and "
-                    + " QN.activityid=UA.activityid and UA.Result != -1  "
-                    + " group by UA.activityid; ";
-
-            // System.out.println(query);
+            //Old query which does not take into account the success rate on the k-th last attempts
+//            String query = "select QN.content_name as activity, count(UA.activityid) as nattempts,  sum(UA.Result) as nsuccess "
+//                    + " from um2.ent_user_activity UA, um2.sql_question_names QN where UA.appid=23 and "
+//                    + " UA.userid = (select userid from um2.ent_user where login='" + usr + "') and "
+//                    + " QN.activityid=UA.activityid and UA.Result != -1  "
+//                    + " group by UA.activityid; ";
+            int kLastResults = 15;//@Jordan pending make it parameterizable
+            String query = "SELECT * " + 
+            		"FROM (SELECT" + 
+            		"    QN.content_name AS activity," + 
+            		"    UA.activityid," + 
+            		"    COUNT(UA.activityid) AS nattempts," + 
+            		"    SUM(UA.Result) AS nsuccess " + 
+            		"FROM" + 
+            		"    um2.ent_user_activity UA," + 
+            		"    um2.sql_question_names QN " + 
+            		"WHERE" + 
+            		"    UA.appid = 23" + 
+            		"        AND UA.userid = (SELECT " + 
+            		"            userid" + 
+            		"        FROM" + 
+            		"            um2.ent_user" + 
+            		"        WHERE" + 
+            		"            login = '"+usr+"')" + 
+            		"        AND QN.activityid = UA.activityid" + 
+            		"        AND UA.Result != - 1 " + 
+            		"GROUP BY UA.activityid) HA " + 
+            		"LEFT JOIN (SELECT " + 
+            		"        LastResults.activityid," + 
+            		"            COUNT(LastResults.activityid) AS lastk_nattempts," + 
+            		"            SUM(LastResults.Result) AS lastk_nsuccess" + 
+            		"    FROM" + 
+            		"        (SELECT " + 
+            		"			*" + 
+            		"		FROM" + 
+            		"			um2.ent_user_activity " + 
+            		"		WHERE" + 
+            		"			userid = (SELECT " + 
+            		"					userid " + 
+            		"				FROM" + 
+            		"					um2.ent_user " + 
+            		"				WHERE" + 
+            		"					login = '"+usr+"')" + 
+            		"				AND appid = 23 " + 
+            		"				AND Result != - 1 " + 
+            		"		ORDER BY DateNTime DESC " + 
+            		"		LIMIT "+kLastResults+") AS LastResults " + 
+            		"    GROUP BY LastResults.activityid) LA " + 
+            		"ON HA.activityid = LA.activityid;";
+            
             rs = stmt.executeQuery(query);
             boolean noactivity = true;
             while (rs.next()) {
                 noactivity = false;
-                String[] act = new String[3];
+                String[] act = new String[5];
                 act[0] = rs.getString("activity");
                 act[1] = rs.getString("nattempts");
                 act[2] = rs.getString("nsuccess");
+                act[3] = rs.getString("lastk_nattempts");
+                if(act[3]==null) act[3] = "-1";
+                act[4] = rs.getString("lastk_nsuccess");
+                if(act[3]==null) act[4] = "-1";
                 if (act[0].length() > 0)
                     res.put(act[0], act);
             }
@@ -829,7 +876,7 @@ public class um2DBInterface extends dbInterface {
 			}
 			query += "group by AA.parentactivityid  " + " order by AA.parentactivityid;";
 
-			// System.out.println(query);
+			//System.out.println(query);
 			rs = stmt.executeQuery(query);
 			// System.out.println(query);
 
@@ -933,6 +980,38 @@ public class um2DBInterface extends dbInterface {
 		}
 	}
 	
+	
+	/**
+	 * This method returns the mappings between PCEX sets and PCEX examples.
+	 * Each set is mapped to one example
+	 * @author roya
+	 */
+	public HashMap<String, String> getExamplesInPCEXSets() {
+		try {
+			HashMap<String, String> res = new HashMap<String, String>();
+			stmt = conn.createStatement();
+			String query = "SELECT A1.activity as set_name, A2.activity as act_name" 
+					+ " FROM um2.ent_activity A1, um2.ent_activity A2, um2.rel_pcex_set_component AA1"
+					+ " where A1.AppID = 45 and A2.AppID = 46 and A2.description = 'PCEX Example' "
+					+ " and AA1.ParentActivityID = A1.ActivityID and AA1.ChildActivityID = A2.ActivityID;";
+			rs = stmt.executeQuery(query);
+			// System.out.println(query);
+			String set, act;
+			while (rs.next()) {
+				set = rs.getString("set_name");
+				act = rs.getString("act_name");
+				res.put(set,act); 
+			}
+			this.releaseStatement(stmt, rs);
+			return res;
+		} catch (SQLException ex) {
+			System.out.println("SQLException: " + ex.getMessage());
+			System.out.println("SQLState: " + ex.getSQLState());
+			System.out.println("VendorError: " + ex.getErrorCode());
+			this.releaseStatement(stmt, rs);
+			return null;
+		}
+	}
 	/**
 	 * This method returns SQLTUTORActivity map of the user. 
 	 * @author cskamil
