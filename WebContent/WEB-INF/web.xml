@@ -176,4 +176,12 @@
     <servlet-name>GetSQLTutorActivity</servlet-name>
     <url-pattern>/GetSQLTutorActivity</url-pattern>
   </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>GetCodeworkoutActivity</servlet-name>
+    <url-pattern>/GetCodeworkoutActivity</url-pattern>
+  </servlet-mapping>
+    <servlet-mapping>
+    <servlet-name>GetCTATActivity</servlet-name>
+    <url-pattern>/GetCTATActivity</url-pattern>
+  </servlet-mapping>
 </web-app>
