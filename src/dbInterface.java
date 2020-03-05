@@ -1,7 +1,5 @@
 import java.sql.*; 
 import java.util.*;
-
-import com.jcraft.jsch.Session;
 public class dbInterface {
 	protected String dbstring;
 	protected String dbuser;
@@ -10,43 +8,40 @@ public class dbInterface {
 	protected Connection conn;
 	protected Statement stmt = null; 
 	protected ResultSet rs = null;
-	private static Session session;
 	
 	public dbInterface(String connurl, String user, String pass){
 		dbstring = connurl;
 		dbuser = user;
 		dbpass = pass;
-		
 	}
 	
 	public boolean openConnection(){
 		try{
 			
-			if(session == null || session.isConnected()) {
-				session = DBConnectionManager.getSession();
-			}
-			
-			String schemaName = dbstring.substring(dbstring.lastIndexOf("/")+1);
-			
-			conn = DBConnectionManager.getConnection(session, schemaName);
-			
-			//Class.forName("com.mysql.jdbc.Driver").newInstance();
+			Class.forName("com.mysql.jdbc.Driver").newInstance();
 			//System.out.println(dbstring+"?"+ "user="+dbuser+"&password="+dbpass);
-			//conn = DriverManager.getConnection(dbstring+"?"+ "user="+dbuser+"&password="+dbpass);
-		
-		}catch (Exception ex) {
+			conn = DriverManager.getConnection(dbstring+"?"+ "user="+dbuser+"&password="+dbpass);
+			if (conn!=null){
+				return true;
+			}
+		}catch (SQLException ex) {
 			System.out.println("SQLException: " + ex.getMessage()); 
-			closeConnection();
+			System.out.println("SQLState: " + ex.getSQLState()); 
+			System.out.println("VendorError: " + ex.getErrorCode());
+			return false;
+		}catch (Exception ex) {
+			ex.printStackTrace();
 			return false;
 		}
-		
 		return true; 
 	}
 	
 	public  void closeConnection(){
 		releaseStatement(stmt, rs);
 		if (conn != null){
-			DBConnectionManager.close(conn, session);
+			try{
+				conn.close();
+			}catch (SQLException sqlEx) { } 
 		}
 	}
 	

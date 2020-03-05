@@ -1150,7 +1150,7 @@ public class um2DBInterface extends dbInterface {
             boolean noactivity = true;
             while (rs.next()) {
                 noactivity = false;
-                String[] act = new String[6];
+                String[] act = new String[7];
                 act[0] = rs.getString("activity");
                 act[1] = rs.getString("nattempts");
                 act[2] = rs.getString("progress");
