@@ -1081,8 +1081,10 @@ public class um2DBInterface extends dbInterface {
             
             String query = "SELECT " + 
 							    "AC.activity AS activity," +
-							    "COUNT(UA.activityid) AS nattempts," +
-							    "MAX(result) AS progress," +
+							    "UA.activityid, " +
+							    "COUNT(UA.activityid) AS nattempts, " +
+							    "MAX(result) AS progress, " +
+							    "SUM(UA.Result) AS nsuccess, " +
 							    "GROUP_CONCAT(CAST(UA.Result AS CHAR) " +
 							        "ORDER BY UA.datentime ASC " +
 							        "SEPARATOR ',') AS attemptSeq " +
@@ -1099,7 +1101,7 @@ public class um2DBInterface extends dbInterface {
             if(dateFrom != null && dateFrom.length() > 0){
             	query += "AND UA.datentime > '"+dateFrom+"' ";
             }
-            query += "GROUP BY UA.activityid;";
+            query += "GROUP BY UA.activityid ";
             
             query = "SELECT " + 
             		"    * " + 
@@ -1114,8 +1116,8 @@ public class um2DBInterface extends dbInterface {
 				            "SUM(LastResults.Result) AS lastk_nsuccess "+
 				    "FROM "+
 				        "(SELECT "+
-				        "*"+
-				    "FROM"+
+				        "* "+
+				    "FROM "+
 				        "um2.ent_user_activity "+
 				    "WHERE "+
 				        "userid = (SELECT "+
@@ -1129,7 +1131,7 @@ public class um2DBInterface extends dbInterface {
 				    "ORDER BY DateNTime DESC "+
 				    "LIMIT "+kLastResults+") AS LastResults "+
 				    "GROUP BY LastResults.activityid) LA "+
-				"ON HA.activityid = LA.activityid;";
+				"ON HA.activityid = LA.activityid";
 
 //            while (rs.next()) {
 //                String[] act = new String[4];
