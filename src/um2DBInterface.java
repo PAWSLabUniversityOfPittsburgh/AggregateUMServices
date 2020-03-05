@@ -383,7 +383,7 @@ public class um2DBInterface extends dbInterface {
             		"		LIMIT "+kLastResults+") AS LastResults " + 
             		"    GROUP BY LastResults.activityid) LA " + 
             		"ON HA.activityid = LA.activityid;";
-            
+            System.out.println(query);
             rs = stmt.executeQuery(query);
             boolean noactivity = true;
             while (rs.next()) {
@@ -395,7 +395,7 @@ public class um2DBInterface extends dbInterface {
                 act[3] = rs.getString("lastk_nattempts");
                 if(act[3]==null) act[3] = "-1";
                 act[4] = rs.getString("lastk_nsuccess");
-                if(act[3]==null) act[4] = "-1";
+                if(act[4]==null) act[4] = "-1";
                 if (act[0].length() > 0)
                     res.put(act[0], act);
             }
@@ -425,11 +425,56 @@ public class um2DBInterface extends dbInterface {
     	try {
             
             stmt = conn.createStatement();
-            String query = "SELECT AC.activity as activity, count(UA.activityid) as nattempts, sum(UA.Result) as nsuccess, "
+            /*String query = "SELECT AC.activity as activity, count(UA.activityid) as nattempts, sum(UA.Result) as nsuccess, "
             		+ "GROUP_CONCAT(cast(UA.Result as char) order by UA.datentime asc separator ',') as attemptSeq "
             		+ "FROM um2.ent_user_activity UA, um2.ent_activity AC "
             		+ "WHERE UA.appid=25 AND UA.userid = (select userid from um2.ent_user where login='"+ usr + "') "
-            		+ "AND AC.activityid=UA.activityid AND UA.Result != -1 ";
+            		+ "AND AC.activityid=UA.activityid AND UA.Result != -1 ";*/
+            
+            int kLastResults = 15;//@Jordan pending make it parameterizable
+            String query = "SELECT * " + 
+            		"FROM (SELECT" + 
+            		"    QN.content_name AS activity," + 
+            		"    UA.activityid," + 
+            		"    COUNT(UA.activityid) AS nattempts," + 
+            		"    SUM(UA.Result) AS nsuccess " + 
+            		"FROM" + 
+            		"    um2.ent_user_activity UA," + 
+            		"    um2.sql_question_names QN " + 
+            		"WHERE" + 
+            		"    UA.appid = 25" + 
+            		"        AND UA.userid = (SELECT " + 
+            		"            userid" + 
+            		"        FROM" + 
+            		"            um2.ent_user" + 
+            		"        WHERE" + 
+            		"            login = '"+usr+"')" + 
+            		"        AND QN.activityid = UA.activityid" + 
+            		"        AND UA.Result != - 1 " + 
+            		"GROUP BY UA.activityid) HA " + 
+            		"LEFT JOIN (SELECT " + 
+            		"        LastResults.activityid," + 
+            		"            COUNT(LastResults.activityid) AS lastk_nattempts," + 
+            		"            SUM(LastResults.Result) AS lastk_nsuccess" + 
+            		"    FROM" + 
+            		"        (SELECT " + 
+            		"			*" + 
+            		"		FROM" + 
+            		"			um2.ent_user_activity " + 
+            		"		WHERE" + 
+            		"			userid = (SELECT " + 
+            		"					userid " + 
+            		"				FROM" + 
+            		"					um2.ent_user " + 
+            		"				WHERE" + 
+            		"					login = '"+usr+"')" + 
+            		"				AND appid = 23 " + 
+            		"				AND Result != - 1 " + 
+            		"		ORDER BY DateNTime DESC " + 
+            		"		LIMIT "+kLastResults+") AS LastResults " + 
+            		"    GROUP BY LastResults.activityid) LA " + 
+            		"ON HA.activityid = LA.activityid;";
+            
             if(dateFrom != null && dateFrom.length() > 0){
             	query += "AND UA.datentime > '"+dateFrom+"' ";
             }
@@ -443,11 +488,21 @@ public class um2DBInterface extends dbInterface {
             boolean noactivity = true;
             while (rs.next()) {
                 noactivity = false;
-                String[] act = new String[4];
+                /*String[] act = new String[4];
                 act[0] = rs.getString("activity");
                 act[1] = rs.getString("nattempts");
                 act[2] = rs.getString("nsuccess");
                 act[3] = rs.getString("attemptSeq");
+                if (act[0].length() > 0)
+                    res.put(act[0], act);*/
+                String[] act = new String[5];
+                act[0] = rs.getString("activity");
+                act[1] = rs.getString("nattempts");
+                act[2] = rs.getString("nsuccess");
+                act[3] = rs.getString("lastk_nattempts");
+                if(act[3]==null) act[3] = "-1";
+                act[4] = rs.getString("lastk_nsuccess");
+                if(act[4]==null) act[4] = "-1";
                 if (act[0].length() > 0)
                     res.put(act[0], act);
             }
@@ -1022,6 +1077,8 @@ public class um2DBInterface extends dbInterface {
             
             stmt = conn.createStatement();
             
+            int kLastResults = 15;//@Jordan pending make it parameterizable
+            
             String query = "SELECT " + 
 							    "AC.activity AS activity," +
 							    "COUNT(UA.activityid) AS nattempts," +
@@ -1043,18 +1100,69 @@ public class um2DBInterface extends dbInterface {
             	query += "AND UA.datentime > '"+dateFrom+"' ";
             }
             query += "GROUP BY UA.activityid;";
+            
+            query = "SELECT " + 
+            		"    * " + 
+            		"FROM " + 
+            		"    (" +
+            		query + 
+            		 ") AS HA "+
+			        "LEFT JOIN "+
+				    "(SELECT "+
+				        "LastResults.activityid, "+
+				            "COUNT(LastResults.activityid) AS lastk_nattempts, "+
+				            "SUM(LastResults.Result) AS lastk_nsuccess "+
+				    "FROM "+
+				        "(SELECT "+
+				        "*"+
+				    "FROM"+
+				        "um2.ent_user_activity "+
+				    "WHERE "+
+				        "userid = (SELECT "+
+				                "userid "+
+				            "FROM "+
+				                "um2.ent_user "+
+				            "WHERE "+
+				                "login = '"+user+"') "+
+				            "AND appid = 19 "+
+				            "AND Result != - 1 "+
+				    "ORDER BY DateNTime DESC "+
+				    "LIMIT "+kLastResults+") AS LastResults "+
+				    "GROUP BY LastResults.activityid) LA "+
+				"ON HA.activityid = LA.activityid;";
 
+//            while (rs.next()) {
+//                String[] act = new String[4];
+//                act[0] = rs.getString("activity");
+//                act[1] = rs.getString("nattempts");
+//                act[2] = rs.getString("progress");
+//                act[3] = rs.getString("attemptSeq");
+//                if (act[0].length() > 0)
+//                    res.put(act[0], act);
+//            }
+//            this.releaseStatement(stmt, rs);
+            
+            System.out.println(query);
             rs = stmt.executeQuery(query);
+            
+            boolean noactivity = true;
             while (rs.next()) {
-                String[] act = new String[4];
+                noactivity = false;
+                String[] act = new String[6];
                 act[0] = rs.getString("activity");
                 act[1] = rs.getString("nattempts");
                 act[2] = rs.getString("progress");
                 act[3] = rs.getString("attemptSeq");
+                act[4] = rs.getString("nsuccess");
+                act[5] = rs.getString("lastk_nattempts");
+                if(act[5]==null) act[5] = "-1";
+                act[6] = rs.getString("lastk_nsuccess");
+                if(act[6]==null) act[6] = "-1";
                 if (act[0].length() > 0)
                     res.put(act[0], act);
             }
             this.releaseStatement(stmt, rs);
+            
         } catch (SQLException ex) {
             System.out.println("SQLException: " + ex.getMessage());
             System.out.println("SQLState: " + ex.getSQLState());
