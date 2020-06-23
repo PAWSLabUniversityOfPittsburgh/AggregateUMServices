@@ -27,7 +27,17 @@ public class ContentProgressSummary {
 	private String attemptsSequence;
 	
 	@JsonProperty("sub-activities")
-	private int subActivities;	
+	private int subActivities;
+	
+	@JsonProperty("lastk-progress")
+	private double lastKprogress;
+	
+	@JsonProperty("lastk-attempts")
+	private int lastKattempts;
+	
+	@JsonProperty("lastk-success-rate")
+	private double lastKsuccessRate;
+	
 	
 	public ContentProgressSummary(String contentId) {
 		this.contentId = contentId;
@@ -36,6 +46,10 @@ public class ContentProgressSummary {
 		this.timeSpent = -1;
 		this.subActivities = -1;
 		this.attemptsSequence = "";
+		//Added by @Jordan
+		this.lastKprogress = -1.0;
+		this.lastKattempts = -1;
+		this.lastKsuccessRate = -1.0;
 	}
 
 	public String getContentId() {
@@ -108,6 +122,30 @@ public class ContentProgressSummary {
 
 	public void setSubActivities(int subActivities) {
 		this.subActivities = subActivities;
+	}
+	
+	public double getLastKprogress() {
+		return lastKprogress;
+	}
+	
+	public void setLastKprogress(double lastKprogress) {
+		this.lastKprogress = lastKprogress;
+	}
+	
+	public int getLastKattempts() {
+		return lastKattempts;
+	}
+	
+	public void setLastKattempts(int lastKattempts) {
+		this.lastKattempts = lastKattempts;
+	}
+	
+	public double getLastKsuccessRate() {
+		return lastKsuccessRate;
+	}
+	
+	public void setLastKsuccessRate(double lastKsuccessRate) {
+		this.lastKsuccessRate = lastKsuccessRate;
 	}
 
 }

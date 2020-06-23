@@ -149,6 +149,10 @@ public class GetQJActivity extends HttpServlet {
 						double attempts = 0;
 						double successRate = 0;
 						String attemptSeq = "";
+						double lastKprogress = -1.0;
+						double lastKnsuccess = -1.0;
+						double lastKattempts = -1.0;
+						double lastKsuccessRate = -1.0;
 						
 						if(currentQuestionAct != null){
 							if(verbose) System.out.println(Arrays.toString(currentQuestionAct));
@@ -161,8 +165,19 @@ public class GetQJActivity extends HttpServlet {
 								}	  
 								if (nsuccess>0) {
 									progress = 1.0;
+								}//Metrics related to the last k attempts (for recommendation purposes) added by @Jordan
+								lastKattempts = Double.parseDouble(currentQuestionAct[4]);
+								lastKnsuccess = Double.parseDouble(currentQuestionAct[5]);
+		
+								if (lastKattempts>0) {
+									  lastKsuccessRate = lastKnsuccess/lastKattempts;
 								}
-							}catch(Exception e){progress = 0;nsuccess=0;successRate=0;attemptSeq="";}
+		
+								if (lastKnsuccess>0) {
+									lastKprogress = 1.0;
+								}	  
+							}catch(Exception e){progress = 0;nsuccess=0;successRate=0;attemptSeq="";lastKsuccessRate =-1.0;lastKattempts = -1;lastKprogress= -1.0;}
+
 
 						}
 
@@ -175,6 +190,10 @@ public class GetQJActivity extends HttpServlet {
 						cntSummaryObj.put("time-spent", -1);
 						cntSummaryObj.put("sub-activities", -1);
 						cntSummaryObj.put("attempts-seq", attemptSeq);
+						//Last k attempts summary (added by @Jordan)
+					    cntSummaryObj.put("lastk-progress", lastKprogress);
+					    cntSummaryObj.put("lastk-attempts", lastKattempts);
+					    cntSummaryObj.put("lastk-success-rate", lastKsuccessRate);
 
 						outputCntListArray.add(cntSummaryObj);
 					}
@@ -188,6 +207,10 @@ public class GetQJActivity extends HttpServlet {
 						double attempts = 0;
 						double successRate = 0;
 						String attemptSeq = "";
+						double lastKprogress = -1.0;
+						double lastKnsuccess = -1.0;
+						double lastKattempts = -1.0;
+						double lastKsuccessRate = -1.0;
 						if(currentQuestionAct != null){
 							if(verbose) System.out.println(Arrays.toString(currentQuestionAct));
 							try{
@@ -200,7 +223,18 @@ public class GetQJActivity extends HttpServlet {
 								if (nsuccess>0) {
 									progress = 1.0;
 								}
-							}catch(Exception e){progress = 0;nsuccess=0;successRate=0;attemptSeq="";}
+								//Metrics related to the last k attempts (for recommendation purposes) added by @Jordan
+								lastKattempts = Double.parseDouble(currentQuestionAct[4]);
+								lastKnsuccess = Double.parseDouble(currentQuestionAct[5]);
+		
+								if (lastKattempts>0) {
+									  lastKsuccessRate = lastKnsuccess/lastKattempts;
+								}
+		
+								if (lastKnsuccess>0) {
+									lastKprogress = 1.0;
+								}	  
+							}catch(Exception e){progress = 0;nsuccess=0;successRate=0;attemptSeq="";lastKsuccessRate =-1.0;lastKattempts = -1;lastKprogress= -1.0;}
 
 						}
 
@@ -213,6 +247,10 @@ public class GetQJActivity extends HttpServlet {
 						cntSummaryObj.put("time-spent", -1);
 						cntSummaryObj.put("sub-activities", -1);
 						cntSummaryObj.put("attempts-seq", attemptSeq);
+						//Last k attempts summary (added by @Jordan)
+					    cntSummaryObj.put("lastk-progress", lastKprogress);
+					    cntSummaryObj.put("lastk-attempts", lastKattempts);
+					    cntSummaryObj.put("lastk-success-rate", lastKsuccessRate);
 
 						outputCntListArray.add(cntSummaryObj);
 					}

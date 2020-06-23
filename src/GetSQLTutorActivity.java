@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -9,6 +10,8 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.json.simple.JSONObject;
 
 import utils.JSONUtils;
 import entity.ContentProgressSummary;
@@ -47,9 +50,13 @@ public class GetSQLTutorActivity extends HttpServlet {
 			String[] contentList = providerContent.getContentList();
 			
 			if(contentList.length != 0) {
-				for (String content : contentList) {
-					ContentProgressSummary progressSummary = createProgressSummary(content, sqltutor_activity);
-					progressOutput.addContentProgress(progressSummary);
+				for (String content : contentList) {		 
+					  //outputCntListArray.add(cntSummaryObj);
+					  //progressOutput.addContentProgress(cntSummaryObj);
+					  ContentProgressSummary progressSummary = createProgressSummary(content, sqltutor_activity);
+					  progressOutput.addContentProgress(progressSummary);
+					
+					
 				}
 			} else {
 				Set<Entry<String, String[]>> activitySet = sqltutor_activity.entrySet();
@@ -77,8 +84,17 @@ public class GetSQLTutorActivity extends HttpServlet {
 				contentSummary.setProgress(Double.parseDouble(contentActivity[2]));
 				contentSummary.setAttemptsSequence(contentActivity[3]);
 				if (contentSummary.getAttempts() > 0) {
-					contentSummary.setSuccessRate(contentSummary.getProgress()/contentSummary.getAttempts());
-				}	  
+					//contentSummary.setSuccessRate(contentSummary.getProgress()/contentSummary.getAttempts());
+					contentSummary.setSuccessRate(Integer.parseInt(contentActivity[4])/contentSummary.getAttempts());
+				}	
+				//Added by @Jordan
+				int lastKprogress = 0;
+				if(Integer.parseInt(contentActivity[6])>0) {
+					lastKprogress = 1;
+				}
+				contentSummary.setLastKprogress(lastKprogress);
+				contentSummary.setLastKattempts(Integer.parseInt(contentActivity[5]));
+				contentSummary.setLastKsuccessRate(Double.parseDouble(contentActivity[6])/Double.parseDouble(contentActivity[5]));
 				
 			}catch(Exception e){}
 
