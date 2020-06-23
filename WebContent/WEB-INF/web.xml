@@ -184,4 +184,8 @@
     <servlet-name>GetCTATActivity</servlet-name>
     <url-pattern>/GetCTATActivity</url-pattern>
   </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>GetCodeLabActivity</servlet-name>
+    <url-pattern>/GetCodeLabActivity</url-pattern>
+  </servlet-mapping>
 </web-app>

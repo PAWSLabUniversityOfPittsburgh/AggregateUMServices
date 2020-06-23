@@ -1407,4 +1407,58 @@ public class um2DBInterface extends dbInterface {
         }
     	return res;
     }
+	
+	/**
+	 * This method returns CodeLabActivity map of the user. 
+	 * @author cskamil
+	 */
+	public HashMap<String, String[]> getUserCodeLabActivity(String user, String dateFrom) {
+    	HashMap<String, String[]> res = new HashMap<String, String[]>();
+    	try {
+            
+            stmt = conn.createStatement();
+            
+            String query = "SELECT " + 
+							    "AC.activity AS activity," +
+							    "COUNT(UA.activityid) AS nattempts," +
+							    "MAX(result) AS progress," +
+							    "GROUP_CONCAT(CAST(UA.Result AS CHAR) " +
+							        "ORDER BY UA.datentime ASC " +
+							        "SEPARATOR ',') AS attemptSeq " +
+							"FROM " +
+							    "um2.ent_user_activity UA INNER JOIN " +
+							    "um2.ent_activity AC on UA.ActivityID = AC.ActivityID INNER JOIN " +
+							    "um2.ent_user usr on UA.UserID = usr.UserID " +
+							"WHERE " +
+							    "UA.appid = 52 " +
+									"AND usr.Login = '"+ user + "' " +
+							        "AND UA.Result != - 1 ";
+            
+            
+            if(dateFrom != null && dateFrom.length() > 0){
+            	query += "AND UA.datentime > '"+dateFrom+"' ";
+            }
+            query += "GROUP BY UA.activityid;";
+
+            rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                String[] act = new String[4];
+                act[0] = rs.getString("activity");
+                act[1] = rs.getString("nattempts");
+                act[2] = rs.getString("progress");
+                act[3] = rs.getString("attemptSeq");
+                if (act[0].length() > 0)
+                    res.put(act[0], act);
+            }
+            this.releaseStatement(stmt, rs);
+        } catch (SQLException ex) {
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+            
+        } finally {
+            this.releaseStatement(stmt, rs);
+        }
+    	return res;
+    }
 }
